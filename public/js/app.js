@@ -1,7 +1,20 @@
 // Keyboard input
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // Prevent Enter from activating focused buttons (New, Stats, etc.)
+  if (e.key === 'Enter') {
+    e.preventDefault();
+  }
   handleKey(e.key);
+  // Visual feedback on virtual keyboard
+  const vk = e.key === 'Enter' ? document.getElementById('key-ENTER')
+           : e.key === 'Backspace' ? document.getElementById('key-⌫')
+           : /^[a-zA-Z]$/.test(e.key) ? document.getElementById(`key-${e.key.toLowerCase()}`)
+           : null;
+  if (vk) {
+    vk.style.transform = 'scale(0.93)';
+    setTimeout(() => { vk.style.transform = ''; }, 120);
+  }
 });
 
 // Service Worker (PWA offline support)
