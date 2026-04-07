@@ -48,8 +48,18 @@ Zero build step. Zero dependencies. Single HTML file.
 ```
 Wordle_Letrax/
 ├── public/
-│   ├── index.html        # Entire app (HTML + CSS + JS)
-│   └── manifest.json     # PWA manifest
+│   ├── index.html         # HTML structure + script imports
+│   ├── manifest.json      # PWA manifest
+│   ├── css/
+│   │   └── style.css      # All styles (theme, tiles, keyboard, modal)
+│   └── js/
+│       ├── words.js       # Word list + valid set
+│       ├── stats.js       # Stats persistence + modal rendering
+│       ├── ui.js          # Toast, animations, modal controls
+│       ├── game.js        # Core game logic (board, keyboard, evaluate)
+│       └── app.js         # Initialization + event listeners + SW
+├── docs/
+│   └── PLAN_CLOUD_STATS.md  # Plan for Supabase cloud sync
 ├── package.json           # Project metadata
 ├── vercel.json            # Vercel deployment config
 └── README.md
