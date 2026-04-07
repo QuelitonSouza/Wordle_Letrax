@@ -6,7 +6,7 @@ let gameOver = false;
 let letterStates = {};
 
 // Difficulty
-let difficulty = localStorage.getItem('letrax-difficulty') || 'easy';
+let difficulty = localStorage.getItem('letrax-difficulty') || 'normal';
 let gameTimer = null;
 let gameStartTime = 0;
 let hintShown = false;
@@ -129,7 +129,7 @@ function submitGuess() {
     if (won) {
       stopTimer();
       const ds = getStats();
-      const earned = calcScore(difficulty, guesses.length);
+      const earned = difficultyEnabled ? calcScore(difficulty, guesses.length) : calcScore('normal', guesses.length);
       ds.played++; ds.won++; ds.streak++;
       if (ds.streak > ds.maxStreak) ds.maxStreak = ds.streak;
       ds.dist[thisRow + 1] = (ds.dist[thisRow + 1] || 0) + 1;
@@ -161,7 +161,8 @@ function startTimer() {
   hintEl.className = 'hint-display';
   scoreEl.textContent = '';
 
-  if (difficulty === 'normal') {
+  // Only show timer/hint mechanics when difficulty mode is enabled and not normal
+  if (!difficultyEnabled || difficulty === 'normal') {
     timerEl.style.display = 'none';
     hintEl.style.display = 'none';
     return;
@@ -207,7 +208,6 @@ function formatTime(secs) {
 function showHint() {
   hintShown = true;
   const hintEl = document.getElementById('hint');
-  // Reveal a random unrevealed letter position
   const unrevealed = [];
   for (let i = 0; i < 5; i++) {
     let alreadyCorrect = false;
@@ -240,16 +240,7 @@ function confirmNewGame() {
     return;
   }
   const mc = document.getElementById('modal-content');
-  // mc.innerHTML = `
-  //   <h2>NEW GAME?</h2>
-  //   <p>The word was <strong style="color:var(--correct);font-family:'Space Mono',monospace;letter-spacing:4px;text-transform:uppercase">${answer}</strong></p>
-  //   <p style="margin-top:8px">This will count as a loss. Continue?</p>
-  //   <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
-  //     <button class="btn-play" style="background:var(--absent);color:var(--text)" onclick="closeModal();">Cancel</button>
-  //     <button class="btn-play" onclick="closeModal();getStats().played++;getStats().streak=0;saveStats();initGame();">New Game</button>
-  //   </div>`;
-
-     mc.innerHTML = `
+  mc.innerHTML = `
     <h2>NEW GAME?</h2>
     <p style="margin-top:8px">This will count as a loss. Continue?</p>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
@@ -272,12 +263,7 @@ function initGame() {
   buildKeyboard();
   startTimer();
 
-  // Show score for current difficulty
   const scoreEl = document.getElementById('score-display');
   const ds = getStats();
-  if (ds.totalScore > 0) {
-    scoreEl.textContent = ds.totalScore + ' pts';
-  } else {
-    scoreEl.textContent = '';
-  }
+  scoreEl.textContent = ds.totalScore > 0 ? ds.totalScore + ' pts' : '';
 }

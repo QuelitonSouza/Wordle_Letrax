@@ -1,3 +1,7 @@
+// Load saved preferences
+loadTheme();
+loadDifficultyMode();
+
 // Keyboard input
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -14,6 +18,15 @@ document.addEventListener('keydown', e => {
   if (vk) {
     vk.style.transform = 'scale(0.93)';
     setTimeout(() => { vk.style.transform = ''; }, 120);
+  }
+});
+
+// Close settings when clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('settings-panel');
+  const toggle = document.getElementById('settings-toggle');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !toggle.contains(e.target)) {
+    panel.classList.remove('open');
   }
 });
 

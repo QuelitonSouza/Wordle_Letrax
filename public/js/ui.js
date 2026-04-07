@@ -49,3 +49,53 @@ function revealRow(row, result, guess, letterStates) {
     });
   }, 5 * 120 + 300);
 }
+
+// ====== SETTINGS PANEL ======
+function toggleSettings() {
+  document.getElementById('settings-panel').classList.toggle('open');
+}
+
+// ====== THEME ======
+function toggleTheme(isDark) {
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('letrax-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('letrax-theme', 'light');
+  }
+  // Update meta theme-color
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = isDark ? '#0a0a0f' : '#f4f4f8';
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem('letrax-theme') || 'dark';
+  const toggle = document.getElementById('theme-toggle');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    toggle.checked = false;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = '#f4f4f8';
+  } else {
+    toggle.checked = true;
+  }
+}
+
+// ====== DIFFICULTY MODE TOGGLE ======
+let difficultyEnabled = localStorage.getItem('letrax-diff-enabled') === 'true';
+
+function toggleDifficultyMode(enabled) {
+  difficultyEnabled = enabled;
+  localStorage.setItem('letrax-diff-enabled', enabled);
+  document.getElementById('diff-row-container').style.display = enabled ? '' : 'none';
+  if (!enabled) {
+    setDifficulty('normal');
+  }
+}
+
+function loadDifficultyMode() {
+  const toggle = document.getElementById('diff-toggle');
+  toggle.checked = difficultyEnabled;
+  document.getElementById('diff-row-container').style.display = difficultyEnabled ? '' : 'none';
+}
