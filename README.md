@@ -18,6 +18,8 @@ An unlimited Wordle clone with English 5-letter words. No daily limits — play 
 - **Virtual + physical keyboard** — tap on-screen keys or type on your keyboard
 - **Dark neon theme** — dark background with green/orange/purple neon accents and glow effects
 - **Responsive** — adapts to any screen size, including small mobile devices
+- **3 difficulty modes** — Easy (hints), Normal (classic), Hard (timed) with separate scoring
+- **Points system** — earn more points on harder difficulties and fewer guesses
 - **Animations** — tile flip reveals, shake on invalid input, bounce on win
 
 ## How to Play

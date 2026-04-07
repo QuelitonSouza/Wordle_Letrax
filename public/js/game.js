@@ -5,6 +5,29 @@ let guesses = [];
 let gameOver = false;
 let letterStates = {};
 
+// Difficulty
+let difficulty = localStorage.getItem('letrax-difficulty') || 'easy';
+let gameTimer = null;
+let gameStartTime = 0;
+let hintShown = false;
+
+const HARD_TIME_LIMIT = 90; // seconds
+
+function setDifficulty(diff) {
+  difficulty = diff;
+  localStorage.setItem('letrax-difficulty', diff);
+  updateDifficultyUI();
+  initGame();
+}
+
+function updateDifficultyUI() {
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.className = 'diff-btn';
+  });
+  const active = document.getElementById(`diff-${difficulty}`);
+  if (active) active.classList.add(`active-${difficulty}`);
+}
+
 function pickWord() {
   return WORDS[Math.floor(Math.random() * WORDS.length)];
 }
@@ -104,31 +127,134 @@ function submitGuess() {
 
   setTimeout(() => {
     if (won) {
-      stats.played++; stats.won++; stats.streak++;
-      if (stats.streak > stats.maxStreak) stats.maxStreak = stats.streak;
-      stats.dist[thisRow + 1] = (stats.dist[thisRow + 1] || 0) + 1;
+      stopTimer();
+      const ds = getStats();
+      const earned = calcScore(difficulty, guesses.length);
+      ds.played++; ds.won++; ds.streak++;
+      if (ds.streak > ds.maxStreak) ds.maxStreak = ds.streak;
+      ds.dist[thisRow + 1] = (ds.dist[thisRow + 1] || 0) + 1;
+      ds.totalScore += earned;
       saveStats(); bounceRow(thisRow);
-      setTimeout(() => showEndModal(true, guesses.length, answer), 600);
+      setTimeout(() => showEndModal(true, guesses.length, answer, earned), 600);
     } else if (thisRow >= 5) {
-      stats.played++; stats.streak = 0; saveStats();
-      setTimeout(() => showEndModal(false, guesses.length, answer), 400);
+      stopTimer();
+      const ds = getStats();
+      ds.played++; ds.streak = 0;
+      saveStats();
+      setTimeout(() => showEndModal(false, guesses.length, answer, 0), 400);
     }
   }, 5 * 120 + 400);
 }
 
+// ====== TIMER ======
+function startTimer() {
+  stopTimer();
+  gameStartTime = Date.now();
+  hintShown = false;
+
+  const timerEl = document.getElementById('timer');
+  const hintEl = document.getElementById('hint');
+  const scoreEl = document.getElementById('score-display');
+  timerEl.textContent = '';
+  timerEl.className = 'timer-display';
+  hintEl.textContent = '';
+  hintEl.className = 'hint-display';
+  scoreEl.textContent = '';
+
+  if (difficulty === 'normal') {
+    timerEl.style.display = 'none';
+    hintEl.style.display = 'none';
+    return;
+  }
+
+  timerEl.style.display = '';
+  hintEl.style.display = '';
+
+  gameTimer = setInterval(() => {
+    if (gameOver) { stopTimer(); return; }
+    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+
+    if (difficulty === 'easy') {
+      timerEl.textContent = formatTime(elapsed);
+      if (elapsed >= 30 && !hintShown) {
+        showHint();
+      }
+    }
+
+    if (difficulty === 'hard') {
+      const remaining = Math.max(0, HARD_TIME_LIMIT - elapsed);
+      timerEl.textContent = formatTime(remaining);
+      if (remaining <= 15) {
+        timerEl.className = 'timer-display warning';
+      }
+      if (remaining <= 0) {
+        timeUp();
+      }
+    }
+  }, 250);
+}
+
+function stopTimer() {
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function showHint() {
+  hintShown = true;
+  const hintEl = document.getElementById('hint');
+  // Reveal a random unrevealed letter position
+  const unrevealed = [];
+  for (let i = 0; i < 5; i++) {
+    let alreadyCorrect = false;
+    for (const g of guesses) {
+      if (g[i] === answer[i]) { alreadyCorrect = true; break; }
+    }
+    if (!alreadyCorrect) unrevealed.push(i);
+  }
+  if (unrevealed.length === 0) return;
+  const pos = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+  const hint = answer.split('').map((ch, i) => i === pos ? ch : '_').join(' ');
+  hintEl.textContent = hint;
+  hintEl.classList.add('visible');
+  showToast('Hint revealed!');
+}
+
+function timeUp() {
+  stopTimer();
+  gameOver = true;
+  const ds = getStats();
+  ds.played++; ds.streak = 0;
+  saveStats();
+  showEndModal(false, guesses.length, answer, 0);
+}
+
+// ====== NEW GAME / INIT ======
 function confirmNewGame() {
   if (gameOver || currentRow === 0) {
     initGame();
     return;
   }
   const mc = document.getElementById('modal-content');
-  mc.innerHTML = `
+  // mc.innerHTML = `
+  //   <h2>NEW GAME?</h2>
+  //   <p>The word was <strong style="color:var(--correct);font-family:'Space Mono',monospace;letter-spacing:4px;text-transform:uppercase">${answer}</strong></p>
+  //   <p style="margin-top:8px">This will count as a loss. Continue?</p>
+  //   <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
+  //     <button class="btn-play" style="background:var(--absent);color:var(--text)" onclick="closeModal();">Cancel</button>
+  //     <button class="btn-play" onclick="closeModal();getStats().played++;getStats().streak=0;saveStats();initGame();">New Game</button>
+  //   </div>`;
+
+     mc.innerHTML = `
     <h2>NEW GAME?</h2>
-    <p>The word was <strong style="color:var(--correct);font-family:'Space Mono',monospace;letter-spacing:4px;text-transform:uppercase">${answer}</strong></p>
     <p style="margin-top:8px">This will count as a loss. Continue?</p>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:20px">
       <button class="btn-play" style="background:var(--absent);color:var(--text)" onclick="closeModal();">Cancel</button>
-      <button class="btn-play" onclick="closeModal();stats.played++;stats.streak=0;saveStats();initGame();">New Game</button>
+      <button class="btn-play" onclick="closeModal();getStats().played++;getStats().streak=0;saveStats();initGame();">New Game</button>
     </div>`;
   document.getElementById('modal').classList.add('open');
 }
@@ -140,6 +266,18 @@ function initGame() {
   guesses = [];
   gameOver = false;
   letterStates = {};
+  hintShown = false;
+  updateDifficultyUI();
   buildBoard();
   buildKeyboard();
+  startTimer();
+
+  // Show score for current difficulty
+  const scoreEl = document.getElementById('score-display');
+  const ds = getStats();
+  if (ds.totalScore > 0) {
+    scoreEl.textContent = ds.totalScore + ' pts';
+  } else {
+    scoreEl.textContent = '';
+  }
 }

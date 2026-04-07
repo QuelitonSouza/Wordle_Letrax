@@ -20,7 +20,24 @@
   </div>
 </header>
 
+<div class="difficulty-bar">
+  <button class="diff-btn active-easy" id="diff-easy" onclick="setDifficulty('easy')">
+    Easy<span class="diff-mult">x0.5</span>
+  </button>
+  <button class="diff-btn" id="diff-normal" onclick="setDifficulty('normal')">
+    Normal<span class="diff-mult">x1.0</span>
+  </button>
+  <button class="diff-btn" id="diff-hard" onclick="setDifficulty('hard')">
+    Hard<span class="diff-mult">x2.0</span>
+  </button>
+</div>
+
 <div id="game-area">
+  <div class="game-info-bar">
+    <span class="timer-display" id="timer"></span>
+    <span class="hint-display" id="hint"></span>
+    <span class="score-display" id="score-display"></span>
+  </div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot c"></div>Correct</div>
     <div class="legend-item"><div class="legend-dot p"></div>Wrong spot</div>
